@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Excel Quiz</title>
+  <script src="xlsx.full.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f9f9f9; }
+    .question-box { background: white; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
+    button { display: block; margin: 0.5rem 0; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; }
+    button.correct { background: #d4edda; color: #155724; }
+    button.wrong { background: #f8d7da; color: #721c24; }
+    .hidden { display: none; }
+    #summary { font-weight: bold; font-size: 1.2rem; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <h1>Quiz from Excel</h1>
+  <div id="progress" style="position: absolute; top: 1rem; right: 1rem; font-weight: bold;"></div>
+
+  <div id="quiz-container"></div>
+  <div id="summary"></div>
+
+  <script>
+    let questions = [];
+    let current = 0;
+    let correctCount = 0;
+    function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+    function loadXLSX() {
+  fetch('Quiz_Vorlage.xlsx')
+    .then(response => response.arrayBuffer())
+    .then(data => {
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet);
+      shuffle(json);           // Shuffle once
+      questions = json;        // Store shuffled list
+      showQuestion();
+    });
+}
+
+
+    function showQuestion() {
+        document.getElementById('progress').innerText = 
+  `Frage ${current + 1} von ${questions.length} – Richtig: ${correctCount}`;
+
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = '';
+      if (current >= questions.length) {
+        document.getElementById('summary').innerText =
+          `Quiz finished! You got ${correctCount} out of ${questions.length} correct.`;
+        return;
+      }
+
+      const q = questions[current];
+      const box = document.createElement('div');
+      box.className = 'question-box';
+
+      const questionText = document.createElement('p');
+      questionText.innerText = q.Frage;
+      box.appendChild(questionText);
+
+      ['A', 'B', 'C', 'D', 'E'].forEach(letter => {
+        const key = 'Antwort ' + letter;
+        const btn = document.createElement('button');
+        btn.innerText = `${letter}: ${q[key]}`;
+        btn.onclick = () => {
+  const selectedAnswer = q[key]?.trim();
+  const correctAnswer = q['Richtige Antwort']?.trim();
+
+  const isCorrect = selectedAnswer === correctAnswer;
+
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    correctCount++;
+  } else {
+    btn.classList.add('wrong');
+    // highlight correct answer too
+    const buttons = box.querySelectorAll('button');
+    buttons.forEach(b => {
+      const bText = b.innerText.split(': ')[1].trim();
+      if (bText === correctAnswer) {
+        b.classList.add('correct');
+      }
+    });
+  }
+
+  // disable all buttons
+  const buttons = box.querySelectorAll('button');
+  buttons.forEach(b => b.disabled = true);
+
+  setTimeout(() => {
+    current++;
+    showQuestion();
+  }, 1000);
+};
+
+
+        box.appendChild(btn);
+        });
+
+
+      container.appendChild(box);
+    }
+
+    loadXLSX();
+  </script>
+</body>
+</html>
