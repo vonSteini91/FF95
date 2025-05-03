@@ -20,7 +20,7 @@
   <div id="quiz-selection">
     <button onclick="startQuiz('Quiz_Vorlage_HLF.xlsx')">🚒 Feuerwehr Quiz HLF</button>
     <button onclick="startQuiz('Quiz_Vorlage_LF.xlsx')">🚒 Feuerwehr Quiz LF</button>
-    <button onclick="startQuiz('Quiz_Vorlage_DLK.xlsx')">🚒 Feuerwehr Quiz DLK</button>
+    <button onclick="startQuiz('Quiz_Vorlage_DLK.xlsx')">🚒 Feuerwehr Quiz</button>
   </div>
 
   <div id="progress" style="position: absolute; top: 1rem; right: 1rem; font-weight: bold;"></div>
@@ -53,7 +53,7 @@
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
           const json = XLSX.utils.sheet_to_json(sheet);
           shuffle(json);
-          questions = json;
+          questions = json.slice(0, 20); // take only the first 20
           current = 0;
           correctCount = 0;
           showQuestion();
